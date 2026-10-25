@@ -38,11 +38,11 @@ export const beneficios: { icono: IconoNombre; titulo: string; texto: string }[]
 ];
 
 export const servicios: { icono: IconoNombre; titulo: string; texto: string }[] = [
-  { icono: "cocina", titulo: "Cocinas", texto: "Muebles base, aéreos, islas y torres." },
-  { icono: "closet", titulo: "Clósets y vestidores", texto: "Walking closets y puertas correderas." },
-  { icono: "bano", titulo: "Baños", texto: "Vanitorios y muebles resistentes a la humedad." },
-  { icono: "living", titulo: "Living y oficina", texto: "Repisas, bibliotecas y escritorios." },
-  { icono: "comercial", titulo: "Negocios", texto: "Cavas, exhibidores y mesones de atención." },
+  { icono: "cocina", titulo: "Cocinas", texto: "Cocinas a medida: muebles base, aéreos, islas y torres." },
+  { icono: "closet", titulo: "Clósets y vestidores", texto: "Clósets, walking closets y puertas correderas a medida." },
+  { icono: "bano", titulo: "Baños", texto: "Vanitorios y muebles de baño resistentes a la humedad." },
+  { icono: "living", titulo: "Living y oficina", texto: "Repisas, bibliotecas y escritorios a medida." },
+  { icono: "comercial", titulo: "Negocios", texto: "Cavas, exhibidores y mesones para locales comerciales." },
   { icono: "taller", titulo: "Proyectos especiales", texto: "Camas altas, reparaciones y lo que tu espacio pida." },
 ];
 

@@ -222,7 +222,7 @@ export function Footer() {
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/img/mark.png"
+            src="/img/mark-96.webp"
             alt=""
             width={36}
             height={36}
@@ -237,10 +237,22 @@ export function Footer() {
             </span>
           </span>
         </div>
-        <p>
-          Diseño · Fabricación · Instalación — {contacto.cobertura} · ©{" "}
-          {new Date().getFullYear()} Legado Muebles SpA
-        </p>
+        {/* Nombre, zona y teléfono iguales que en Google e Instagram (ayuda al SEO local) */}
+        <address className="not-italic sm:text-right">
+          <p>Legado Muebles SpA · Muebles a medida en Curicó, Región del Maule</p>
+          <p>
+            WhatsApp{" "}
+            <a
+              href={whatsappLink()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline-offset-4 hover:text-paper hover:underline"
+            >
+              {contacto.whatsapp}
+            </a>{" "}
+            · © {new Date().getFullYear()}
+          </p>
+        </address>
       </div>
     </footer>
   );

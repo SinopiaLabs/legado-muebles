@@ -31,7 +31,7 @@ export default function Header() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 md:h-20 lg:px-10">
         <a href="#inicio" className="flex items-center gap-3" aria-label="Legado Muebles, ir al inicio">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/img/mark.png" alt="" width={34} height={34} className="h-8 w-8 md:h-9 md:w-9" />
+          <img src="/img/mark-96.webp" alt="" width={34} height={34} className="h-8 w-8 md:h-9 md:w-9" />
           <span className="leading-none">
             <span className="block font-serif text-xl tracking-[0.22em] text-ink">LEGADO</span>
             <span className="mt-0.5 block text-[0.6rem] tracking-[0.55em] text-wood">MUEBLES</span>

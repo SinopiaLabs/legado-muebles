@@ -74,11 +74,25 @@ export function useReducedMotion() {
 }
 
 let webglCache: boolean | null = null;
+/**
+ * WebGL con aceleración por hardware. Si el navegador dibuja por software
+ * (SwiftShader, llvmpipe: equipos sin GPU, máquinas virtuales, herramientas de
+ * auditoría) el 3D se vuelve lento y se usan las versiones livianas en CSS.
+ * `?3d=webgl` fuerza WebGL para pruebas.
+ */
 function hasWebGL() {
   if (webglCache === null) {
     try {
       const c = document.createElement("canvas");
-      webglCache = !!(c.getContext("webgl2") || c.getContext("webgl"));
+      const gl = (c.getContext("webgl2") || c.getContext("webgl")) as WebGLRenderingContext | null;
+      if (!gl) webglCache = false;
+      else if (new URLSearchParams(location.search).get("3d") === "webgl") webglCache = true;
+      else {
+        const info = gl.getExtension("WEBGL_debug_renderer_info");
+        const renderer = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : "";
+        webglCache = !/swiftshader|llvmpipe|softpipe|software|basic render/i.test(renderer);
+      }
+      gl?.getExtension("WEBGL_lose_context")?.loseContext();
     } catch {
       webglCache = false;
     }
@@ -93,4 +107,37 @@ export function useWebGL() {
     () => hasWebGL(),
     () => null,
   );
+}
+
+/** Pasa a true la primera vez que el elemento se acerca a la pantalla y se queda así. */
+export function useNearOnce(target: RefObject<Element | null>, rootMargin = "100% 0px") {
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    const el = target.current;
+    if (!el || near) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          setNear(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [target, rootMargin, near]);
+  return near;
+}
+
+/** true cuando el navegador queda libre después de la carga (para trabajo no urgente). */
+export function useIdle(timeout = 1500) {
+  const [idle, setIdle] = useState(false);
+  useEffect(() => {
+    const ric = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 200));
+    const cic = window.cancelIdleCallback ?? window.clearTimeout;
+    const id = ric(() => setIdle(true), { timeout });
+    return () => cic(id);
+  }, [timeout]);
+  return idle;
 }

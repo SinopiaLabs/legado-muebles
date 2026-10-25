@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Jost } from "next/font/google";
-import { contacto } from "@/lib/data";
+import { DESCRIPCION, NOMBRE, SITE_URL, TITULO, jsonLd } from "@/lib/seo";
 import "./globals.css";
 
 const serif = Cormorant_Garamond({
@@ -16,35 +16,27 @@ const sans = Jost({
   weight: ["300", "400", "500"],
 });
 
-const descripcion =
-  "Cocinas, clósets y muebles a medida en Curicó y alrededores. Diseñamos, fabricamos e instalamos. Cotiza por WhatsApp.";
-
 export const metadata: Metadata = {
-  metadataBase: new URL("https://legadomuebles.cl"),
-  title: "Legado Muebles · Muebles a medida en Curicó",
-  description: descripcion,
+  metadataBase: new URL(SITE_URL),
+  title: { default: TITULO, template: `%s | ${NOMBRE}` },
+  description: DESCRIPCION,
+  applicationName: NOMBRE,
+  alternates: { canonical: "/" },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large" } },
   openGraph: {
-    title: "Legado Muebles · Muebles a medida en Curicó",
-    description: descripcion,
-    locale: "es_CL",
     type: "website",
-    images: [{ url: "/img/lm01-cocina-isla.webp", width: 1400, height: 723, alt: "Cocina con isla fabricada por Legado Muebles" }],
+    url: "/",
+    siteName: NOMBRE,
+    title: TITULO,
+    description: DESCRIPCION,
+    locale: "es_CL",
   },
+  twitter: { card: "summary_large_image", title: TITULO, description: DESCRIPCION },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
   themeColor: "#f7f3ec",
-};
-
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FurnitureStore",
-  name: "Legado Muebles",
-  description: descripcion,
-  telephone: contacto.whatsapp.replace(/\s/g, ""),
-  areaServed: "Curicó, Región del Maule, Chile",
-  address: { "@type": "PostalAddress", addressLocality: "Curicó", addressRegion: "Maule", addressCountry: "CL" },
-  sameAs: [contacto.instagramUrl],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

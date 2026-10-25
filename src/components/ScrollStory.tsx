@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useRef, useState } from "react";
 import CssCabinet from "./CssCabinet";
-import { useInView, useScrollProgress, useWebGL } from "./hooks";
+import { useInView, useNearOnce, useScrollProgress, useWebGL } from "./hooks";
 import { acabados } from "./three/textures";
 
 const CabinetScene = dynamic(() => import("./three/CabinetScene"), { ssr: false });
@@ -35,6 +35,8 @@ export default function ScrollStory() {
 
   const progress = useScrollProgress(ref, "pin", onProgress);
   const visible = useInView(ref, "200px");
+  // El 3D se carga recién cuando la sección está a media pantalla de distancia
+  const near = useNearOnce(ref, "50% 0px");
   const webgl = useWebGL();
   const acabado = elegido ?? autoAcabado;
 
@@ -47,7 +49,7 @@ export default function ScrollStory() {
     <section ref={ref} id="proceso" aria-labelledby="proceso-titulo" className="relative h-[360vh] bg-paper md:h-[420vh]">
       <div className="sticky top-0 h-[100svh] overflow-hidden">
         <div className="absolute inset-0">
-          {webgl ? (
+          {!near ? null : webgl ? (
             <CabinetScene progress={progress} override={override} active={visible} onFinish={() => {}} />
           ) : webgl === false ? (
             <CssCabinet progress={progress} finish={acabado} />
