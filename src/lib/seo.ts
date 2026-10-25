@@ -22,7 +22,7 @@ export const jsonLd = {
       url: SITE_URL,
       telephone: telefono,
       image: `${SITE_URL}/opengraph-image.jpg`,
-      logo: `${SITE_URL}/img/mark.png`,
+      logo: `${SITE_URL}/img/icon-512.png`,
       slogan: "Diseño · Fabricación · Instalación de muebles a medida",
       address: { "@type": "PostalAddress", addressLocality: "Curicó", addressRegion: "Región del Maule", addressCountry: "CL" },
       // Negocio de área de servicio: atiende en terreno, sin local abierto al público
