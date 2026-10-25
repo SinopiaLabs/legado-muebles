@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
-import { woodTexture } from "./textures";
+import { TILE_H, TILE_W, mapasAcabado, maderaLogo } from "./textures";
 
 // Contornos del isotipo, trazados sobre el logo en una grilla de 512 px (y hacia abajo)
 const NEGRO = [[68, 45], [122, 12], [122, 445], [375, 445], [375, 500], [68, 500]];
@@ -49,16 +49,25 @@ function Mark({ progress, reduced }: { progress: RefObject<number>; reduced: boo
       }),
     [],
   );
+  // 1 unidad del logo ≈ 35 cm de tablero, para que la veta tenga escala de mueble real
   const wood = useMemo(() => {
-    const t = woodTexture("#a86a3d", "#5e3518", 3, 0.38);
-    t.repeat.set(0.9, 0.9);
-    t.rotation = 0.08;
-    return t;
+    const m = mapasAcabado(maderaLogo, 3);
+    for (const t of [m.map, m.bumpMap]) {
+      t.repeat.set(0.35 / TILE_W, 0.35 / TILE_H);
+      t.rotation = 0.06;
+    }
+    return m;
   }, []);
   const mats = useMemo(
     () => [
-      new THREE.MeshStandardMaterial({ color: "#1d1c1a", roughness: 0.55 }),
-      new THREE.MeshStandardMaterial({ map: wood, roughness: 0.5 }),
+      new THREE.MeshPhysicalMaterial({ color: "#1d1c1a", roughness: 0.6, clearcoat: 0.1, clearcoatRoughness: 0.5 }),
+      new THREE.MeshPhysicalMaterial({
+        ...wood,
+        bumpScale: maderaLogo.relieve,
+        roughness: maderaLogo.rugosidad,
+        clearcoat: 0.12,
+        clearcoatRoughness: 0.45,
+      }),
     ],
     [wood],
   );
@@ -66,7 +75,8 @@ function Mark({ progress, reduced }: { progress: RefObject<number>; reduced: boo
     () => () => {
       geos.forEach((g) => g.dispose());
       mats.forEach((m) => m.dispose());
-      wood.dispose();
+      wood.map.dispose();
+      wood.bumpMap.dispose();
     },
     [geos, mats, wood],
   );

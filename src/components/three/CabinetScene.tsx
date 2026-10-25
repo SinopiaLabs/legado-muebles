@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, Environment, Grid, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
-import { acabados, woodTexture } from "./textures";
+import { acabados, blanco, mapasAcabado, uvEnMetros } from "./textures";
 
 type V3 = [number, number, number];
 type Kind = "carcass" | "front" | "metal" | "led";
@@ -98,29 +98,52 @@ function Cabinet({
   onFinish: (i: number) => void;
 }) {
   const parts = useMemo(() => buildParts(), []);
-  const { size } = useThree();
+  const { size, gl } = useThree();
 
   const geos = useMemo(
     () =>
-      parts.map((p) => {
+      parts.map((p, i) => {
         const g = p.cyl
           ? new THREE.CylinderGeometry(p.size[0], p.size[0], p.size[1], 16).rotateZ(Math.PI / 2)
-          : new THREE.BoxGeometry(...p.size);
+          : uvEnMetros(new THREE.BoxGeometry(...p.size), p.size, (i * 0.137) % 1);
         return { mesh: g, edges: new THREE.EdgesGeometry(g, 30) };
       }),
     [parts],
   );
-  const doorGeo = useMemo(() => {
-    const g = new THREE.BoxGeometry(DOOR_W, DOOR_H, T);
-    return { mesh: g, edges: new THREE.EdgesGeometry(g) };
-  }, []);
+  // Cada puerta con su propio desfase de veta, como tableros distintos
+  const doorGeos = useMemo(
+    () =>
+      DOORS.map((_, i) => {
+        const g = uvEnMetros(new THREE.BoxGeometry(DOOR_W, DOOR_H, T), [DOOR_W, DOOR_H, T], 0.21 + i * 0.29);
+        return { mesh: g, edges: new THREE.EdgesGeometry(g) };
+      }),
+    [],
+  );
   const handleGeo = useMemo(() => new THREE.BoxGeometry(0.016, 0.42, 0.02), []);
 
-  const textures = useMemo(() => acabados.map((a, i) => woodTexture(a.base, a.veta, 11 + i * 17, a.contraste)), []);
+  const textures = useMemo(() => {
+    const aniso = gl.capabilities.getMaxAnisotropy();
+    return { frentes: acabados.map((a, i) => mapasAcabado(a, 11 + i * 17, aniso)), blanco: mapasAcabado(blanco, 5, aniso) };
+  }, [gl]);
+  // Melamina satinada: base mate con una capa levemente brillante encima
   const mats = useMemo(
     () => ({
-      carcass: new THREE.MeshStandardMaterial({ color: "#f3efe8", roughness: 0.6, transparent: true }),
-      front: new THREE.MeshStandardMaterial({ color: "#ffffff", map: textures[0], roughness: 0.45, transparent: true }),
+      carcass: new THREE.MeshPhysicalMaterial({
+        ...textures.blanco,
+        bumpScale: blanco.relieve,
+        roughness: blanco.rugosidad,
+        clearcoat: 0.08,
+        clearcoatRoughness: 0.5,
+        transparent: true,
+      }),
+      front: new THREE.MeshPhysicalMaterial({
+        ...textures.frentes[0],
+        bumpScale: acabados[0].relieve,
+        roughness: acabados[0].rugosidad,
+        clearcoat: 0.12,
+        clearcoatRoughness: 0.45,
+        transparent: true,
+      }),
       metal: new THREE.MeshStandardMaterial({ color: "#d4d4d4", metalness: 0.9, roughness: 0.25, transparent: true }),
       led: new THREE.MeshBasicMaterial({ color: "#3a3a3a", toneMapped: false, transparent: true }),
       line: new THREE.LineBasicMaterial({ color: "#8e5c36", transparent: true }),
@@ -131,13 +154,12 @@ function Cabinet({
   useEffect(
     () => () => {
       geos.forEach((g) => (g.mesh.dispose(), g.edges.dispose()));
-      doorGeo.mesh.dispose();
-      doorGeo.edges.dispose();
+      doorGeos.forEach((g) => (g.mesh.dispose(), g.edges.dispose()));
       handleGeo.dispose();
-      textures.forEach((t) => t.dispose());
+      [...textures.frentes, textures.blanco].forEach((t) => (t.map.dispose(), t.bumpMap.dispose()));
       Object.values(mats).forEach((m) => m.dispose());
     },
-    [geos, doorGeo, handleGeo, textures, mats],
+    [geos, doorGeos, handleGeo, textures, mats],
   );
 
   const partRefs = useRef<(THREE.Group | null)[]>([]);
@@ -181,7 +203,11 @@ function Cabinet({
     const finish = override.current ?? autoFinish(p);
     if (finish !== s.finish) {
       s.finish = finish;
-      mats.front.map = textures[finish];
+      const a = acabados[finish];
+      mats.front.map = textures.frentes[finish].map;
+      mats.front.bumpMap = textures.frentes[finish].bumpMap;
+      mats.front.bumpScale = a.relieve;
+      mats.front.roughness = a.rugosidad;
       onFinish(finish);
     }
 
@@ -239,10 +265,10 @@ function Cabinet({
           <group ref={(el) => void (hingeRefs.current[i] = el)}>
             <group position={[(d.dir * DOOR_W) / 2, 0, 0]}>
               <group ref={(el) => void (doorMeshRefs.current[i] = el)}>
-                <mesh geometry={doorGeo.mesh} material={mats.front} castShadow />
+                <mesh geometry={doorGeos[i].mesh} material={mats.front} castShadow />
                 <mesh geometry={handleGeo} material={mats.metal} position={[d.dir * (DOOR_W / 2 - 0.06), 0.05, T / 2 + 0.012]} />
               </group>
-              <lineSegments geometry={doorGeo.edges} material={mats.line} />
+              <lineSegments geometry={doorGeos[i].edges} material={mats.line} />
             </group>
           </group>
         </group>

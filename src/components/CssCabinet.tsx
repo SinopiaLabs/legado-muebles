@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties, type RefObject } from "react";
-import { acabados } from "./three/textures";
+import { useEffect, useMemo, useRef, type CSSProperties, type RefObject } from "react";
+import { TILE_H, TILE_W, acabados, lienzosAcabado } from "./three/textures";
 
 /*
  * Respaldo 3D con transformaciones CSS para navegadores sin WebGL.
@@ -48,28 +48,46 @@ const smooth = (a: number, b: number, x: number) => {
 
 function Box({ size: [w, h, d], front = false }: { size: V3; front?: boolean }) {
   const [pw, ph, pd] = [w * U, h * U, d * U];
-  const face = (fw: number, fh: number, transform: string, shade: number): CSSProperties => ({
-    position: "absolute",
-    width: fw,
-    height: fh,
-    left: -fw / 2,
-    top: -fh / 2,
-    transform,
-    backfaceVisibility: "hidden",
-    background: `color-mix(in srgb, ${front ? "var(--finish)" : "#f3efe8"} calc(var(--solid) * 100%), transparent)`,
-    backgroundImage: front ? "var(--grain)" : undefined,
-    filter: shade ? `brightness(${1 - shade})` : undefined,
-    outline: "1px solid color-mix(in srgb, #8e5c36 calc(var(--lines) * 100%), transparent)",
-    outlineOffset: -1,
-  });
+  const face = (fw: number, fh: number, transform: string, shade: number) => (
+    <div
+      style={{
+        position: "absolute",
+        width: fw,
+        height: fh,
+        left: -fw / 2,
+        top: -fh / 2,
+        transform,
+        backfaceVisibility: "hidden",
+        background: `color-mix(in srgb, ${front ? "var(--finish)" : "#f1eee8"} calc(var(--solid) * 100%), transparent)`,
+        outline: "1px solid color-mix(in srgb, #8e5c36 calc(var(--lines) * 100%), transparent)",
+        outlineOffset: -1,
+      }}
+    >
+      {/* Textura real del acabado (misma que usa WebGL), a escala en metros */}
+      {front && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: "var(--tex)",
+            backgroundSize: `${TILE_W * U}px ${TILE_H * U}px`,
+            opacity: "var(--solid)",
+          }}
+        />
+      )}
+      {shade !== 0 && (
+        <div style={{ position: "absolute", inset: 0, background: shade > 0 ? `rgba(0,0,0,${shade})` : `rgba(255,255,255,${-shade})`, opacity: "var(--solid)" }} />
+      )}
+    </div>
+  );
   return (
     <>
-      <div style={face(pw, ph, `translateZ(${pd / 2}px)`, 0)} />
-      <div style={face(pw, ph, `rotateY(180deg) translateZ(${pd / 2}px)`, 0.12)} />
-      <div style={face(pd, ph, `rotateY(-90deg) translateZ(${pw / 2}px)`, 0.08)} />
-      <div style={face(pd, ph, `rotateY(90deg) translateZ(${pw / 2}px)`, 0.08)} />
-      <div style={face(pw, pd, `rotateX(90deg) translateZ(${ph / 2}px)`, -0.03)} />
-      <div style={face(pw, pd, `rotateX(-90deg) translateZ(${ph / 2}px)`, 0.15)} />
+      {face(pw, ph, `translateZ(${pd / 2}px)`, 0)}
+      {face(pw, ph, `rotateY(180deg) translateZ(${pd / 2}px)`, 0.12)}
+      {face(pd, ph, `rotateY(-90deg) translateZ(${pw / 2}px)`, 0.08)}
+      {face(pd, ph, `rotateY(90deg) translateZ(${pw / 2}px)`, 0.08)}
+      {face(pw, pd, `rotateX(90deg) translateZ(${ph / 2}px)`, -0.03)}
+      {face(pw, pd, `rotateX(-90deg) translateZ(${ph / 2}px)`, 0.15)}
     </>
   );
 }
@@ -123,9 +141,11 @@ export default function CssCabinet({ progress, finish }: { progress: RefObject<n
   }, [progress]);
 
   const a = acabados[finish];
+  // Se genera en el navegador: este componente solo se monta del lado del cliente
+  const texturas = useMemo(() => acabados.map((x, i) => `url(${lienzosAcabado(x, 11 + i * 17).color.toDataURL("image/jpeg", 0.85)})`), []);
   const vars = {
     "--finish": a.base,
-    "--grain": a.contraste > 0.2 ? `repeating-linear-gradient(92deg, transparent 0 7px, ${a.veta}22 7px 9px, transparent 9px 15px)` : "none",
+    "--tex": texturas[finish],
     "--solid": 0,
     "--lines": 1,
     "--led": 0,
