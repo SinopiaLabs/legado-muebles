@@ -1,0 +1,21 @@
+# Stack en la VM Docker: /opt/stacks/legado-muebles/compose.yaml
+# Watchtower actualiza la imagen sola cuando GitHub Actions publica una nueva.
+services:
+  web:
+    image: arturoalvarez/legado-muebles:latest
+    container_name: legado-muebles
+    ports:
+      - 8096:80
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+        reservations:
+          memory: 16M
+networks: {}

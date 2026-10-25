@@ -17,10 +17,14 @@ npm install
 npm run dev
 ```
 
-## Publicar
+## Despliegue automático
 
-```bash
-npm run build
-```
+Cada push a `main` dispara `.github/workflows/deploy.yml`:
 
-Genera `out/`, una carpeta estática que se puede subir a cualquier hosting (Nginx, Cloudflare Pages, Netlify, S3…).
+1. Lint, typecheck y build (también corre en los PR, sin publicar).
+2. Construye la imagen (`Dockerfile`: Next.js estático servido por nginx) y la sube a Docker Hub como `arturoalvarez/legado-muebles:latest`.
+3. En la VM Docker (192.168.0.53), Watchtower detecta la imagen nueva en menos de 5 minutos y reinicia el contenedor.
+
+El stack del servidor está en `/opt/stacks/legado-muebles/compose.yaml` (copia en `deploy/compose.yaml`) y publica el puerto **8096**. El dominio se conecta con el túnel de Cloudflare apuntando a `http://localhost:8096`.
+
+El repo necesita los secretos `DOCKER_USERNAME` y `DOCKER_TOKEN` (los mismos del portfolio).

@@ -20,6 +20,7 @@ const descripcion =
   "Cocinas, clósets y muebles a medida en Curicó y alrededores. Diseñamos, fabricamos e instalamos. Cotiza por WhatsApp.";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://legadomuebles.cl"),
   title: "Legado Muebles · Muebles a medida en Curicó",
   description: descripcion,
   openGraph: {
