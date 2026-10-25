@@ -17,7 +17,7 @@ const sans = Jost({
 });
 
 const descripcion =
-  "Diseño, fabricación e instalación de muebles a medida en Curicó y alrededores: cocinas, clósets, vestidores, vanitorios y mobiliario comercial.";
+  "Cocinas, clósets y muebles a medida en Curicó y alrededores. Diseñamos, fabricamos e instalamos. Cotiza por WhatsApp.";
 
 export const metadata: Metadata = {
   title: "Legado Muebles · Muebles a medida en Curicó",
@@ -41,7 +41,6 @@ const jsonLd = {
   name: "Legado Muebles",
   description: descripcion,
   telephone: contacto.whatsapp.replace(/\s/g, ""),
-  email: contacto.correo,
   areaServed: "Curicó, Región del Maule, Chile",
   address: { "@type": "PostalAddress", addressLocality: "Curicó", addressRegion: "Maule", addressCountry: "CL" },
   sameAs: [contacto.instagramUrl],

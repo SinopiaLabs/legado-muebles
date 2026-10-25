@@ -11,6 +11,9 @@ type V3 = [number, number, number];
 type Kind = "carcass" | "front" | "metal" | "led";
 type PartDef = { size: V3; pos: V3; ex: V3; kind: Kind; delay: number; cyl?: boolean };
 
+/** Acabado que corresponde al scroll si el visitante no eligió uno. */
+export const autoFinish = (p: number) => (p < 0.42 ? 0 : Math.min(acabados.length - 1, Math.floor((p - 0.42) / 0.06)));
+
 const smooth = (a: number, b: number, x: number) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
@@ -85,7 +88,15 @@ function cameraAt(p: number, pos: THREE.Vector3, tgt: THREE.Vector3) {
   tgt.set(...a.tgt).lerp(new THREE.Vector3(...b.tgt), t);
 }
 
-function Cabinet({ progress, onFinish }: { progress: RefObject<number>; onFinish: (i: number) => void }) {
+function Cabinet({
+  progress,
+  override,
+  onFinish,
+}: {
+  progress: RefObject<number>;
+  override: RefObject<number | null>;
+  onFinish: (i: number) => void;
+}) {
   const parts = useMemo(() => buildParts(), []);
   const { size } = useThree();
 
@@ -167,7 +178,7 @@ function Cabinet({ progress, onFinish }: { progress: RefObject<number>; onFinish
       if (mesh) mesh.visible = solid > 0.01;
     });
 
-    const finish = p < 0.42 ? 0 : Math.min(acabados.length - 1, Math.floor((p - 0.42) / 0.06));
+    const finish = override.current ?? autoFinish(p);
     if (finish !== s.finish) {
       s.finish = finish;
       mats.front.map = textures[finish];
@@ -201,7 +212,7 @@ function Cabinet({ progress, onFinish }: { progress: RefObject<number>; onFinish
       camPos.x -= 1.05;
       camTgt.x -= 1.05;
     } else {
-      camTgt.y -= 0.75;
+      camTgt.y -= 0.95;
     }
     camera.position.lerp(camPos, 1 - Math.exp(-6 * dt));
     lookAt.current.lerp(camTgt, 1 - Math.exp(-6 * dt));
@@ -244,29 +255,33 @@ function Cabinet({ progress, onFinish }: { progress: RefObject<number>; onFinish
 
 export default function CabinetScene({
   progress,
+  override,
   active,
   onFinish,
 }: {
   progress: RefObject<number>;
+  override: RefObject<number | null>;
   active: boolean;
   onFinish: (i: number) => void;
 }) {
+  // En celulares: menos resolución y sin sombras dinámicas para cuidar batería y fluidez
+  const mobile = window.matchMedia("(max-width: 767px)").matches;
   return (
     <Canvas
       frameloop={active ? "always" : "never"}
-      dpr={[1, 1.75]}
-      shadows
+      dpr={mobile ? [1, 1.5] : [1, 1.75]}
+      shadows={!mobile}
       camera={{ position: [3.6, 3.4, 5.2], fov: 32, near: 0.1, far: 60 }}
       gl={{ antialias: true, alpha: true }}
       aria-hidden
     >
       <hemisphereLight args={["#fffaf2", "#d8cbb8", 0.9]} />
-      <directionalLight position={[3, 6, 4]} intensity={1.6} castShadow shadow-mapSize={[1024, 1024]} />
+      <directionalLight position={[3, 6, 4]} intensity={1.6} castShadow={!mobile} shadow-mapSize={[1024, 1024]} />
       <Environment resolution={128}>
         <Lightformer intensity={1.4} position={[0, 4, 4]} scale={[8, 4, 1]} color="#fff6ea" />
         <Lightformer intensity={0.8} position={[-5, 2, 0]} rotation-y={Math.PI / 2} scale={[6, 3, 1]} color="#f2e6d4" />
       </Environment>
-      <Cabinet progress={progress} onFinish={onFinish} />
+      <Cabinet progress={progress} override={override} onFinish={onFinish} />
       <ContactShadows position={[0, 0.001, 0]} opacity={0.35} scale={8} blur={2.6} far={3} resolution={512} color="#4a3624" />
       <Grid
         position={[0, 0, 0]}

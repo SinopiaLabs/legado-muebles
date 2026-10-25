@@ -2,99 +2,101 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useRef, useState } from "react";
+import CssCabinet from "./CssCabinet";
 import { useInView, useScrollProgress, useWebGL } from "./hooks";
 import { acabados } from "./three/textures";
 
 const CabinetScene = dynamic(() => import("./three/CabinetScene"), { ssr: false });
 
-// Tramos del scroll que coinciden con la animación de CabinetScene
+// Igual que autoFinish en CabinetScene (sin importar el módulo de three.js)
+const acabadoPorScroll = (p: number) => (p < 0.42 ? 0 : Math.min(acabados.length - 1, Math.floor((p - 0.42) / 0.06)));
+
+// Tramos del scroll que coinciden con la animación del mueble
 const etapas = [
-  {
-    hasta: 0.22,
-    n: "01",
-    titulo: "Escuchamos y medimos",
-    texto: "Todo comienza en tu espacio: tomamos medidas, conocemos tus gustos, prioridades y cómo vas a usar el mueble.",
-  },
-  {
-    hasta: 0.42,
-    n: "02",
-    titulo: "Diseñamos la solución",
-    texto: "Definimos distribución, repisas, cajones y zonas de colgado. Cada pieza tiene un lugar y una razón.",
-  },
-  {
-    hasta: 0.68,
-    n: "03",
-    titulo: "Seleccionamos materiales",
-    texto: "Melaminas, laminados de alta presión, cubiertas y herrajes elegidos según el uso, la estética y el presupuesto.",
-  },
-  {
-    hasta: 1.01,
-    n: "04",
-    titulo: "Fabricamos e instalamos",
-    texto: "Cuidamos ajustes, encuentros y terminaciones, e instalamos en terreno revisando cada detalle contigo.",
-  },
+  { hasta: 0.22, titulo: "Medimos tu espacio", texto: "Vamos a terreno, tomamos medidas y escuchamos cómo usarás el mueble." },
+  { hasta: 0.42, titulo: "Diseñamos cada pieza", texto: "Repisas, cajones y zonas de colgado: cada parte tiene un lugar y una razón." },
+  { hasta: 0.68, titulo: "Eliges el acabado", texto: "Toca un acabado para verlo en el mueble." },
+  { hasta: 1.01, titulo: "Fabricamos e instalamos", texto: "Lo armamos en taller, lo instalamos y revisamos contigo cada detalle." },
 ];
 
 export default function ScrollStory() {
   const ref = useRef<HTMLElement>(null);
   const [etapa, setEtapa] = useState(0);
-  const [acabado, setAcabado] = useState(0);
+  const [autoAcabado, setAutoAcabado] = useState(0);
+  const [elegido, setElegido] = useState<number | null>(null);
+  const override = useRef<number | null>(null);
   const barRef = useRef<HTMLDivElement>(null);
 
   const onProgress = useCallback((p: number) => {
     setEtapa(etapas.findIndex((e) => p < e.hasta));
-    if (barRef.current) barRef.current.style.transform = `scaleY(${p})`;
+    setAutoAcabado(acabadoPorScroll(p));
+    if (barRef.current) barRef.current.style.transform = `scaleX(${p})`;
   }, []);
 
   const progress = useScrollProgress(ref, "pin", onProgress);
   const visible = useInView(ref, "200px");
   const webgl = useWebGL();
+  const acabado = elegido ?? autoAcabado;
+
+  function elegir(i: number) {
+    override.current = i;
+    setElegido(i);
+  }
 
   return (
-    <section ref={ref} id="recorrido" aria-label="Cómo trabajamos, paso a paso" className="relative h-[420vh] bg-paper">
+    <section ref={ref} id="proceso" aria-labelledby="proceso-titulo" className="relative h-[360vh] bg-paper md:h-[420vh]">
       <div className="sticky top-0 h-[100svh] overflow-hidden">
         <div className="absolute inset-0">
           {webgl ? (
-            <CabinetScene progress={progress} active={visible} onFinish={setAcabado} />
+            <CabinetScene progress={progress} override={override} active={visible} onFinish={() => {}} />
           ) : webgl === false ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src="/img/lm02-walking-closet.webp" alt="" className="h-full w-full object-cover opacity-90" />
+            <CssCabinet progress={progress} finish={acabado} />
           ) : null}
         </div>
 
-        <div className="pointer-events-none relative mx-auto flex h-full max-w-7xl items-end px-4 pb-6 sm:px-6 md:items-center md:pb-0 lg:px-10">
-          <div className="relative flex w-full gap-5 md:max-w-md">
-            <div className="hidden w-px shrink-0 bg-line md:block" aria-hidden>
-              <div ref={barRef} className="h-full w-px origin-top scale-y-0 bg-wood" />
+        <div className="relative mx-auto flex h-full max-w-7xl flex-col justify-end px-4 pb-24 pt-20 sm:px-6 md:justify-center md:pb-0 lg:px-10">
+          <h2 id="proceso-titulo" className="sr-only">
+            Cómo trabajamos, en cuatro pasos
+          </h2>
+          <div className="story-panel md:max-w-sm">
+            <div className="flex items-center gap-3" aria-hidden>
+              <span className="font-serif text-sm text-wood-text tabular-nums">0{etapa + 1}</span>
+              <div className="h-px flex-1 bg-line">
+                <div ref={barRef} className="h-px origin-left scale-x-0 bg-wood" />
+              </div>
+              <span className="font-serif text-sm text-ink-soft">04</span>
             </div>
-            <div className="relative grid w-full">
+            <div className="relative mt-4 grid">
               {etapas.map((e, i) => (
-                <article
-                  key={e.n}
+                <div
+                  key={e.titulo}
                   aria-hidden={i !== etapa}
-                  className={`story-card col-start-1 row-start-1 ${i === etapa ? "is-active" : ""}`}
+                  className={`story-step col-start-1 row-start-1 ${i === etapa ? "is-active" : ""}`}
                 >
-                  <p className="eyebrow">Paso {e.n} de 04</p>
-                  <h2 className="mt-3 font-serif text-3xl leading-tight text-ink sm:text-4xl">{e.titulo}</h2>
-                  <p className="mt-3 leading-relaxed text-ink-soft">{e.texto}</p>
-                  {i === 2 && (
-                    <ul className="mt-5 flex flex-wrap gap-2" aria-label="Acabados de ejemplo">
-                      {acabados.map((a, j) => (
-                        <li
-                          key={a.nombre}
-                          className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-colors ${
-                            j === acabado ? "border-wood bg-white text-ink" : "border-line text-ink-soft"
-                          }`}
-                        >
-                          <span className="h-3 w-3 rounded-full" style={{ background: a.base }} aria-hidden />
-                          {a.nombre}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </article>
+                  <h3 className="font-serif text-[1.9rem] leading-tight text-ink sm:text-4xl">{e.titulo}</h3>
+                  <p className="mt-2 text-[0.95rem] leading-relaxed text-ink-soft">{e.texto}</p>
+                </div>
               ))}
             </div>
+            {etapa >= 2 && (
+              <fieldset className="mt-4">
+                <legend className="sr-only">Elige un acabado</legend>
+                <div className="flex flex-wrap gap-2">
+                  {acabados.map((a, j) => (
+                    <button
+                      key={a.nombre}
+                      type="button"
+                      onClick={() => elegir(j)}
+                      aria-pressed={j === acabado}
+                      className={`finish-chip ${j === acabado ? "is-on" : ""}`}
+                    >
+                      <span className="h-4 w-4 rounded-full ring-1 ring-ink/15" style={{ background: a.base }} aria-hidden />
+                      {a.nombre}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+            )}
           </div>
         </div>
       </div>

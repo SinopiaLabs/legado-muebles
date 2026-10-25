@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { whatsappLink } from "@/lib/data";
+import { WhatsAppIcon } from "./icons";
 
 const links = [
-  { href: "#nosotros", label: "Nosotros" },
+  { href: "#proceso", label: "Proceso" },
   { href: "#servicios", label: "Servicios" },
   { href: "#proyectos", label: "Proyectos" },
-  { href: "#contacto", label: "Contacto" },
+  { href: "#preguntas", label: "Preguntas" },
 ];
 
 export default function Header() {
@@ -42,7 +44,8 @@ export default function Header() {
               {l.label}
             </a>
           ))}
-          <a href="#contacto" className="btn-primary !px-5 !py-2.5 text-sm">
+          <a href={whatsappLink()} target="_blank" rel="noopener noreferrer" className="btn-primary !min-h-11 !px-5 !py-2 text-sm">
+            <WhatsAppIcon className="h-4 w-4" />
             Cotizar
           </a>
         </nav>
@@ -74,6 +77,10 @@ export default function Header() {
               {l.label}
             </a>
           ))}
+          <a href={whatsappLink()} target="_blank" rel="noopener noreferrer" className="btn-primary mt-6 w-full">
+            <WhatsAppIcon className="h-5 w-5" />
+            Cotiza por WhatsApp
+          </a>
         </nav>
       )}
     </header>
