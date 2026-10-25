@@ -1,0 +1,192 @@
+@import "tailwindcss";
+
+/* Paleta tomada del manual de marca: crema, negro carbón y madera */
+@theme {
+  --color-paper: #f7f3ec;
+  --color-sand: #e9dccb;
+  --color-line: #e2d8c9;
+  --color-ink: #1d1c1a;
+  --color-ink-soft: #5f5a53;
+  --color-wood: #9a6235;
+  --color-wood-dark: #6f4322;
+
+  --font-serif: var(--font-cormorant), "Times New Roman", serif;
+  --font-sans: var(--font-jost), system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-weight: 400;
+}
+
+::selection {
+  background: var(--color-sand);
+}
+
+@layer components {
+  .eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--color-wood);
+    font-weight: 500;
+  }
+
+  .section-title {
+    font-family: var(--font-serif);
+    font-size: clamp(2.1rem, 4.2vw, 3.4rem);
+    line-height: 1.08;
+    color: var(--color-ink);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--color-ink);
+    color: var(--color-paper);
+    padding: 0.95rem 1.7rem;
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+    transition: background-color 0.25s;
+  }
+  .btn-primary:hover {
+    background: var(--color-wood-dark);
+  }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--color-ink);
+    padding: 0.95rem 1.7rem;
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+    transition: background-color 0.25s, color 0.25s;
+  }
+  .btn-ghost:hover {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  .nav-link {
+    position: relative;
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+    color: var(--color-ink);
+  }
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    height: 1px;
+    width: 100%;
+    background: var(--color-wood);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s;
+  }
+  .nav-link:hover::after {
+    transform: scaleX(1);
+  }
+
+  .field {
+    display: grid;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    color: var(--color-ink-soft);
+  }
+  .field input,
+  .field select,
+  .field textarea {
+    border: 0;
+    border-bottom: 1px solid var(--color-line);
+    background: transparent;
+    padding: 0.55rem 0;
+    font-size: 1rem;
+    letter-spacing: 0;
+    color: var(--color-ink);
+    border-radius: 0;
+  }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    outline: none;
+    border-bottom-color: var(--color-wood);
+  }
+
+  .story-card {
+    background: color-mix(in srgb, var(--color-paper) 88%, transparent);
+    backdrop-filter: blur(8px);
+    padding: 1.5rem;
+    border: 1px solid var(--color-line);
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.5s, transform 0.5s;
+  }
+  .story-card.is-active {
+    opacity: 1;
+    transform: none;
+  }
+  @media (min-width: 768px) {
+    .story-card {
+      padding: 2rem;
+    }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .reveal.is-shown {
+    opacity: 1;
+    transform: none;
+  }
+
+  .scroll-cue {
+    width: 1px;
+    height: 42px;
+    background: linear-gradient(var(--color-wood), transparent);
+    animation: cue 2s ease-in-out infinite;
+    transform-origin: top;
+  }
+
+  .ficha[open] {
+    animation: ficha-in 0.35s ease;
+  }
+}
+
+@keyframes cue {
+  0%, 100% { transform: scaleY(0.4); opacity: 0.5; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
+@keyframes ficha-in {
+  from { opacity: 0; transform: translateY(12px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal,
+  .story-card {
+    transition: none;
+    transform: none;
+  }
+  .reveal {
+    opacity: 1;
+  }
+  .scroll-cue {
+    animation: none;
+  }
+}
