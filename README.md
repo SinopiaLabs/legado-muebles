@@ -3,6 +3,7 @@
 Sitio de presentación de Legado Muebles (Curicó): muebles a medida, diseño, fabricación e instalación.
 
 - **Stack:** Next.js 16 (exportación estática), Tailwind 4, three.js con React Three Fiber.
+- **Tipografías:** Cormorant Garamond y Jost incluidas en `src/fonts` (Fontsource, licencia OFL), así que el build no descarga nada.
 - **3D:** el isotipo del logo (portada) y un clóset que se arma con el scroll, en el que el visitante puede elegir el acabado (`src/components/three/`).
   Los modelos se generan por código, no hay archivos `.glb`. Sin WebGL, el clóset se dibuja en 3D con CSS (`CssCabinet.tsx`).
 - **Contenido:** textos, servicios, proyectos y preguntas frecuentes en `src/lib/data.ts`. Imágenes (con versión de 800 px para celular) y videos en `public/`.

@@ -1,19 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Jost } from "next/font/google";
+import localFont from "next/font/local";
 import { DESCRIPCION, NOMBRE, SITE_URL, TITULO, jsonLd } from "@/lib/seo";
 import "./globals.css";
 
-const serif = Cormorant_Garamond({
+// Fuentes incluidas en el proyecto (Fontsource, licencia OFL en src/fonts):
+// el build no depende de descargar nada de Google Fonts.
+const serif = localFont({
   variable: "--font-cormorant",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
+  src: [
+    { path: "../fonts/cormorant-garamond-latin-wght-normal.woff2", weight: "300 700", style: "normal" },
+    { path: "../fonts/cormorant-garamond-latin-wght-italic.woff2", weight: "300 700", style: "italic" },
+  ],
+  display: "swap",
+  fallback: ["Times New Roman", "serif"],
 });
 
-const sans = Jost({
+const sans = localFont({
   variable: "--font-jost",
-  subsets: ["latin"],
-  weight: ["300", "400", "500"],
+  src: "../fonts/jost-latin-wght-normal.woff2",
+  weight: "100 900",
+  display: "swap",
+  fallback: ["system-ui", "sans-serif"],
 });
 
 export const metadata: Metadata = {
