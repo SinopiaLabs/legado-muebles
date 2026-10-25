@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
-import { TILE_H, TILE_W, mapasAcabado, maderaLogo } from "./textures";
+import { mapasAcabado } from "./mapas";
+import { TILE_H, TILE_W, maderaLogo } from "./textures";
 
 // Contornos del isotipo, trazados sobre el logo en una grilla de 512 px (y hacia abajo)
 const NEGRO = [[68, 45], [122, 12], [122, 445], [375, 445], [375, 500], [68, 500]];

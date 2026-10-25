@@ -5,7 +5,8 @@ import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, Environment, Grid, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
-import { acabados, blanco, mapasAcabado, uvEnMetros } from "./textures";
+import { mapasAcabado, uvEnMetros, type Mapas } from "./mapas";
+import { acabados, blanco } from "./textures";
 
 type V3 = [number, number, number];
 type Kind = "carcass" | "front" | "metal" | "led";
@@ -121,10 +122,20 @@ function Cabinet({
   );
   const handleGeo = useMemo(() => new THREE.BoxGeometry(0.016, 0.42, 0.02), []);
 
+  // Solo se genera el primer acabado al inicio; el resto se crea al pedirlo o cuando el navegador está libre
   const textures = useMemo(() => {
     const aniso = gl.capabilities.getMaxAnisotropy();
-    return { frentes: acabados.map((a, i) => mapasAcabado(a, 11 + i * 17, aniso)), blanco: mapasAcabado(blanco, 5, aniso) };
+    const frentes: (Mapas | undefined)[] = [];
+    const frente = (i: number) => (frentes[i] ??= mapasAcabado(acabados[i], 11 + i * 17, aniso));
+    frente(0);
+    return { frentes, frente, blanco: mapasAcabado(blanco, 5, aniso) };
   }, [gl]);
+  useEffect(() => {
+    const ric = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 300));
+    const cic = window.cancelIdleCallback ?? window.clearTimeout;
+    const ids = acabados.map((_, i) => ric(() => textures.frente(i), { timeout: 4000 }));
+    return () => ids.forEach((id) => cic(id));
+  }, [textures]);
   // Melamina satinada: base mate con una capa levemente brillante encima
   const mats = useMemo(
     () => ({
@@ -137,7 +148,7 @@ function Cabinet({
         transparent: true,
       }),
       front: new THREE.MeshPhysicalMaterial({
-        ...textures.frentes[0],
+        ...textures.frente(0),
         bumpScale: acabados[0].relieve,
         roughness: acabados[0].rugosidad,
         clearcoat: 0.12,
@@ -156,7 +167,7 @@ function Cabinet({
       geos.forEach((g) => (g.mesh.dispose(), g.edges.dispose()));
       doorGeos.forEach((g) => (g.mesh.dispose(), g.edges.dispose()));
       handleGeo.dispose();
-      [...textures.frentes, textures.blanco].forEach((t) => (t.map.dispose(), t.bumpMap.dispose()));
+      [...textures.frentes, textures.blanco].forEach((t) => t && (t.map.dispose(), t.bumpMap.dispose()));
       Object.values(mats).forEach((m) => m.dispose());
     },
     [geos, doorGeos, handleGeo, textures, mats],
@@ -168,7 +179,7 @@ function Cabinet({
   const hingeRefs = useRef<(THREE.Group | null)[]>([]);
   const doorMeshRefs = useRef<(THREE.Group | null)[]>([]);
   const ledLight = useRef<THREE.PointLight>(null);
-  const state = useRef({ p: 0, finish: -1 });
+  const state = useRef({ p: -1, finish: -1 });
   const camPos = useMemo(() => new THREE.Vector3(), []);
   const camTgt = useMemo(() => new THREE.Vector3(), []);
   const lookAt = useRef(new THREE.Vector3(0, 1.1, 0));
@@ -177,7 +188,8 @@ function Cabinet({
 
   useFrame(({ camera }, dt) => {
     const s = state.current;
-    s.p = THREE.MathUtils.damp(s.p, progress.current ?? 0, 5, Math.min(dt, 0.1));
+    // Si la escena se monta con el scroll ya avanzado, parte desde ahí en vez de animar desde cero
+    s.p = s.p < 0 ? (progress.current ?? 0) : THREE.MathUtils.damp(s.p, progress.current ?? 0, 5, Math.min(dt, 0.1));
     const p = s.p;
 
     // 1) Plano → 2) armado → 3) acabados → 4) puertas abiertas y luz
@@ -204,8 +216,9 @@ function Cabinet({
     if (finish !== s.finish) {
       s.finish = finish;
       const a = acabados[finish];
-      mats.front.map = textures.frentes[finish].map;
-      mats.front.bumpMap = textures.frentes[finish].bumpMap;
+      const t = textures.frente(finish);
+      mats.front.map = t.map;
+      mats.front.bumpMap = t.bumpMap;
       mats.front.bumpScale = a.relieve;
       mats.front.roughness = a.rugosidad;
       onFinish(finish);

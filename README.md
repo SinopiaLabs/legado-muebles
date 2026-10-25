@@ -9,6 +9,7 @@ Sitio de presentación de Legado Muebles (Curicó): muebles a medida, diseño, f
 - **Contacto:** solo WhatsApp. Cada servicio abre WhatsApp con un mensaje listo.
 - **Iconos:** [Lucide](https://lucide.dev) más WhatsApp e Instagram en `src/components/icons.tsx`. Todos usan `currentColor`: el color general se cambia en `--color-icon` (`src/app/globals.css`) o por icono con una clase de texto.
 - **Accesibilidad:** el estudio de contraste y la auditoría están en [`docs/accesibilidad.md`](docs/accesibilidad.md).
+- **SEO:** metadatos, datos estructurados, rendimiento y pasos para el lanzamiento en [`docs/seo.md`](docs/seo.md).
 
 ## Desarrollo
 
