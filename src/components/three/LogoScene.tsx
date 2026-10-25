@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { ContactShadows, Environment, Lightformer } from "@react-three/drei";
+import { Environment, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
 import { woodTexture } from "./textures";
 
@@ -77,17 +77,19 @@ function Mark({ progress, reduced }: { progress: RefObject<number>; reduced: boo
   const smoothP = useRef(0);
   // Hacia dónde se separa cada pieza al hacer scroll
   const spread: [number, number, number][] = [
-    [-0.7, -0.2, -0.5],
-    [0.2, 0.55, 0.6],
-    [0.7, -0.45, 0.9],
+    [-0.55, -0.15, -0.4],
+    [0.15, 0.4, 0.45],
+    [0.55, -0.35, 0.6],
   ];
 
-  useFrame(({ clock, pointer }, dt) => {
+  useFrame(({ clock, pointer, camera, size }, dt) => {
+    // Aleja la cámara según la forma del lienzo para que las piezas nunca se corten en el borde
+    camera.position.z = 6.6 * Math.max(1, 1.05 / (size.width / size.height));
     if (t0.current === null) t0.current = clock.elapsedTime;
     // Entrada: las piezas se ensamblan al cargar
     const intro = reduced ? 1 : smooth(0, 1.6, clock.elapsedTime - t0.current);
     smoothP.current = THREE.MathUtils.damp(smoothP.current, progress.current ?? 0, 6, Math.min(dt, 0.1));
-    const sep = (1 - intro) * 1.6 + smooth(0, 1, smoothP.current) * 1.1;
+    const sep = (1 - intro) * 0.9 + smooth(0, 1, smoothP.current) * 0.6;
 
     pieces.current.forEach((m, i) => {
       if (!m) return;
@@ -135,7 +137,7 @@ export default function LogoScene({
     <Canvas
       frameloop={active ? "always" : "never"}
       dpr={[1, 1.75]}
-      camera={{ position: [0, 0, 5.2], fov: 32 }}
+      camera={{ position: [0, 0, 6.6], fov: 32 }}
       gl={{ antialias: true, alpha: true }}
       aria-hidden
     >
@@ -147,7 +149,6 @@ export default function LogoScene({
         <Lightformer intensity={0.6} position={[4, 0, 2]} rotation-y={-Math.PI / 3} scale={[3, 4, 1]} color="#f0d9bb" />
       </Environment>
       <Mark progress={progress} reduced={reduced} />
-      <ContactShadows position={[0, -1.55, 0]} opacity={0.28} scale={6} blur={2.8} far={3} color="#3b2a1a" />
     </Canvas>
   );
 }
