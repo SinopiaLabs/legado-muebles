@@ -9,6 +9,7 @@ import {
 import Foto from "./Foto";
 import { Icono, InstagramIcon, WhatsAppIcon } from "./icons";
 import Reveal from "./Reveal";
+import { SinopiaCredito } from "./SinopiaCredito";
 
 export function Beneficios() {
   return (
@@ -252,6 +253,7 @@ export function Footer() {
             </a>{" "}
             · © {new Date().getFullYear()}
           </p>
+          <SinopiaCredito cliente="legadomuebles" className="mt-1" />
         </address>
       </div>
     </footer>
