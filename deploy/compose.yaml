@@ -1,21 +1,24 @@
-# Stack en la VM Docker: /opt/stacks/legado-muebles/compose.yaml
-# Watchtower actualiza la imagen sola cuando GitHub Actions publica una nueva.
+# Stack de Legado Muebles. El workflow de CI/CD (.github/workflows/ci-cd.yml) lo copia a /opt/stacks/legado-muebles (producción)
+# o /opt/stacks/legado-muebles-pruebas y lo levanta con IMAGEN, CONTENEDOR y PUERTO definidos.
 services:
   web:
-    image: arturoalvarez/legado-muebles:latest
-    container_name: legado-muebles
-    ports:
-      - 8096:80
+    image: ${IMAGEN:?IMAGEN no definida}
+    container_name: ${CONTENEDOR:?CONTENEDOR no definido}
     restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:${PUERTO:?PUERTO no definido}:80"
     read_only: true
     tmpfs:
       - /var/cache/nginx
       - /var/run
       - /tmp
+    labels:
+      com.centurylinklabs.watchtower.enable: "false" # la imagen es local; la actualiza el CI/CD, no Watchtower
     deploy:
       resources:
         limits:
           memory: 64M
         reservations:
           memory: 16M
-networks: {}
